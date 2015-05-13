@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_install:
+	# somehow OBS damages composer.phar, adding one byte
+	# probably due to https://www.debian.org/doc/debian-policy/ap-pkg-sourcepkg.html: "text files which are missing the usual final newline"
+	# dpkg-source thinks that composer.phar is a text file and adds a newline
+	md5sum debian/composer.phar
+	if [ "$(md5sum composer.phar | awk '{ print $1 }')" != "4678f9f648f2fb2348097ebf4bbde229" ]; then echo md5sum should be "4678f9f648f2fb2348097ebf4bbde229"; fi 
+	hexdump debian/composer.phar | tail -n 3
+	head -c -1 debian/composer.phar > debian/composer.phar.fixed
+	rm debian/composer.phar
+	mv debian/composer.phar.fixed debian/composer.phar
+	md5sum debian/composer.phar
+	dh_install
